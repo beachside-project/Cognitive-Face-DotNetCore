@@ -223,10 +223,10 @@ namespace Microsoft.ProjectOxford.Face
         public static string GetAttributeString(IEnumerable<FaceAttributeType> types)
         {
             return string.Join(",", types.Select(attr =>
-                {
-                    var attrStr = attr.ToString();
-                    return char.ToLowerInvariant(attrStr[0]) + attrStr.Substring(1);
-                }).ToArray());
+            {
+                var attrStr = attr.ToString();
+                return char.ToLowerInvariant(attrStr[0]) + attrStr.Substring(1);
+            }).ToArray());
         }
 
         /// <summary>
@@ -444,7 +444,7 @@ namespace Microsoft.ProjectOxford.Face
         }
 
         /// <summary>
-        /// Gets all person groups asynchronously.
+        /// Gets person groups asynchronously.
         /// </summary>
         /// <returns>Person group entity array.</returns>
         [Obsolete("use ListPersonGroupsAsync instead")]
@@ -565,23 +565,41 @@ namespace Microsoft.ProjectOxford.Face
         }
 
         /// <summary>
-        /// Gets all persons inside a person group asynchronously.
+        /// Gets persons inside a person group asynchronously.
         /// </summary>
         /// <param name="personGroupId">The person group id.</param>
         /// <returns>
         /// The person entity array.
         /// </returns>
+        [Obsolete("use ListPersonsAsync instead")]
         public async Task<Person[]> GetPersonsAsync(string personGroupId)
         {
+            return await ListPersonsAsync(personGroupId);
+        }
+
+        /// <summary>
+        /// List the top persons whose Id is larger than "start" inside a person group asynchronously.
+        /// </summary>
+        /// <param name="personGroupId">The person group id.</param>
+        /// <param name="start">Person Id bar. List the persons whose Id is larger than "start".</param>
+        /// <param name="top">The number of persons to list.</param>>
+        /// <returns>
+        /// The person entity array.
+        /// </returns>
+        public async Task<Person[]> ListPersonsAsync(string personGroupId, string start = "", int top = 1000)
+        {
             var requestUrl = string.Format(
-                "{0}/{1}/{2}/{3}",
+                "{0}/{1}/{2}/{3}?start={4}&top={5}",
                 ServiceHost,
                 PersonGroupsQuery,
                 personGroupId,
-                PersonsQuery);
+                PersonsQuery,
+                start,
+                top.ToString(CultureInfo.InvariantCulture));
 
             return await this.SendRequestAsync<object, Person[]>(HttpMethod.Get, requestUrl, null);
         }
+
 
         /// <summary>
         /// Adds a face to a person asynchronously.
@@ -596,8 +614,8 @@ namespace Microsoft.ProjectOxford.Face
         /// </returns>
         public async Task<AddPersistedFaceResult> AddPersonFaceAsync(string personGroupId, Guid personId, string imageUrl, string userData = null, FaceRectangle targetFace = null)
         {
-            var requestUrl = string.Format("{0}/{1}/{2}/{3}/{4}/{5}?userData={6}&targetFace={7}", 
-                ServiceHost, PersonGroupsQuery, personGroupId, PersonsQuery, personId, PersistedFacesQuery, userData, 
+            var requestUrl = string.Format("{0}/{1}/{2}/{3}/{4}/{5}?userData={6}&targetFace={7}",
+                ServiceHost, PersonGroupsQuery, personGroupId, PersonsQuery, personId, PersistedFacesQuery, userData,
                 targetFace == null ? string.Empty : string.Format("{0},{1},{2},{3}", targetFace.Left, targetFace.Top, targetFace.Width, targetFace.Height));
 
             return await this.SendRequestAsync<object, AddPersistedFaceResult>(HttpMethod.Post, requestUrl, new { url = imageUrl });
@@ -616,8 +634,8 @@ namespace Microsoft.ProjectOxford.Face
         /// </returns>
         public async Task<AddPersistedFaceResult> AddPersonFaceAsync(string personGroupId, Guid personId, Stream imageStream, string userData = null, FaceRectangle targetFace = null)
         {
-            var requestUrl = string.Format("{0}/{1}/{2}/{3}/{4}/{5}?userData={6}&targetFace={7}", 
-                ServiceHost, PersonGroupsQuery, personGroupId, PersonsQuery, personId, PersistedFacesQuery, userData, 
+            var requestUrl = string.Format("{0}/{1}/{2}/{3}/{4}/{5}?userData={6}&targetFace={7}",
+                ServiceHost, PersonGroupsQuery, personGroupId, PersonsQuery, personId, PersistedFacesQuery, userData,
                 targetFace == null ? string.Empty : string.Format("{0},{1},{2},{3}", targetFace.Left, targetFace.Top, targetFace.Width, targetFace.Height));
 
             return await this.SendRequestAsync<Stream, AddPersistedFaceResult>(HttpMethod.Post, requestUrl, imageStream);
@@ -871,7 +889,7 @@ namespace Microsoft.ProjectOxford.Face
         /// </returns>
         public async Task<AddPersistedFaceResult> AddFaceToFaceListAsync(string faceListId, string imageUrl, string userData = null, FaceRectangle targetFace = null)
         {
-            var requestUrl = string.Format("{0}/{1}/{2}/{3}?userData={4}&targetFace={5}", 
+            var requestUrl = string.Format("{0}/{1}/{2}/{3}?userData={4}&targetFace={5}",
                 ServiceHost, FaceListsQuery, faceListId, PersistedFacesQuery, userData,
                 targetFace == null ? string.Empty : string.Format("{0},{1},{2},{3}", targetFace.Left, targetFace.Top, targetFace.Width, targetFace.Height));
 
@@ -890,8 +908,8 @@ namespace Microsoft.ProjectOxford.Face
         /// </returns>
         public async Task<AddPersistedFaceResult> AddFaceToFaceListAsync(string faceListId, Stream imageStream, string userData = null, FaceRectangle targetFace = null)
         {
-            var requestUrl = string.Format("{0}/{1}/{2}/{3}?userData={4}&targetFace={5}", 
-                ServiceHost, FaceListsQuery, faceListId, PersistedFacesQuery, userData, 
+            var requestUrl = string.Format("{0}/{1}/{2}/{3}?userData={4}&targetFace={5}",
+                ServiceHost, FaceListsQuery, faceListId, PersistedFacesQuery, userData,
                 targetFace == null ? string.Empty : string.Format("{0},{1},{2},{3}", targetFace.Left, targetFace.Top, targetFace.Width, targetFace.Height));
 
             return await this.SendRequestAsync<object, AddPersistedFaceResult>(HttpMethod.Post, requestUrl, imageStream);
